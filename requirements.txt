@@ -15,6 +15,7 @@ pre-commit      # hooks for applying linters on commit
 rich            # beautiful text formatting in terminal
 pytest          # tests
 phonemizer      # phonemization of text
+typeguard==2.13.3
 kaldiio
 tensorboard
 librosa
