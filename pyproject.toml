@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=42.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tokan"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+license = { text = "Apache-2.0" }
+
+authors = [
+  { name = "Qibing Bai", email = "qibingbai@link.cuhk.edu.cn" },
+]
+
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+  "packaging",
+]
+
+[project.urls]
+Homepage = "https://github.com/P1ping/TokAN.git"
+
+[tool.setuptools]
+packages = ["tokan"]
+
+[tool.black]
+line-length = 120
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = "tests/"
+addopts = [
+  "--color=yes",
+  "--durations=0",
+  "--strict-markers",
+  "--doctest-modules",
+]
+filterwarnings = [
+  "ignore::DeprecationWarning",
+  "ignore::UserWarning",
+]
+log_cli = "True"
+markers = [
+  "slow: slow tests",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: nocover",
+    "raise NotImplementedError",
+    "raise NotImplementedError()",
+    "if __name__ == .__main__.:",
+]

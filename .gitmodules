@@ -1,0 +1,3 @@
+[submodule "third_party/fairseq"]
+	path = third_party/fairseq
+	url = https://github.com/facebookresearch/fairseq
