@@ -2,6 +2,8 @@
 
 This repository contains the official implementation and pretrained models for the Interspeech 2025 paper: **"Accent Normalization Using Self-Supervised Discrete Tokens with Non-Parallel Data"**.
 
+**📄 [Paper](https://arxiv.org/abs/2507.17735) | 🎵 [Demo](https://p1ping.github.io/TokAN-Demo/)**
+
 ## Project Status: Inference Code Release
 
 This repository currently provides the code and pretrained models required to run **inference** with the TokAN system.
@@ -13,18 +15,22 @@ The code for **training** the models from scratch will be cleaned up and release
 
 ## Installation
 
-We strongly recommend using a `conda` or `venv` virtual environment with Python 3.9+. The installation process is sensitive to the order of operations. Please follow these steps for installation.
+We strongly recommend using a `conda` or `venv` virtual environment with Python 3.8+.
 
 ### Step 1: Clone Repository and Setup Environment
 
-First, clone the repository, making sure to initialize the `fairseq` submodule. Then, create and activate your virtual environment.
+First, clone the repository, making sure to initialize the `fairseq` submodule.
 
 ```bash
-# Clone the repository and all its submodules
 git clone --recurse-submodules https://github.com/P1ping/TokAN.git
 cd TokAN
+```
 
-# Create and activate a virtual environment (recommended)
+If you forgot the `--recurse-submodules` flag, run `git submodule update --init --recursive` after cloning.
+
+Then, create and activate your virtual environment:
+```bash
+# Create and activate a virtual environment
 python3 -m venv venv
 source venv/bin/activate
 # Or you can create a new environment via conda
@@ -32,14 +38,16 @@ source venv/bin/activate
 
 ### Step 2: Install PyTorch
 
-The code has been run with torch versions `2.0.1` and `2.5.1`. So, we recommend a torch version in between, while other versions are probably compatible as well.
+For successful load of fairseq models, we recommend `torch<=2.5.1`.
 
 > For other CUDA versions or CPU-only installation, please visit the [official PyTorch website](https://pytorch.org/get-started/locally/) for the correct command.
 
 ### Step 3: Install the Custom Fairseq Dependency
 
-The `token-to-token` component of TokAN requires a specific version of Fairseq, which is included in the `third_party` directory. This **must be installed before** the other requirements to resolve a dependency conflict with `hydra-core`.
+The `token-to-token` component of TokAN requires the fairseq toolkit, which is included in the `third_party` directory.
 This **should be installed before** the the main project. Fairseq requires a lower version of `hydra-core`, which should be upgraded during installation of the main project.
+
+> **💡 Tip:** You probably need `pip<=24.0` and `gcc 9 or later` for successful fairseq installation.
 
 ```bash
 # Navigate to the submodule directory
@@ -73,6 +81,8 @@ python inference.py --input_path /path/to/input.wav --output_path /path/to/outpu
 ```
 
 This will automatically download all required models and perform accent conversion on your audio file. Specifically, it will split the input audio (when it is long) into chunks and convert them one by one. The chunking is based on `silero_vad`, please check the arguments for detailed configurations. When `--preserve_duration` is given, the script will select the model with flow-matching-based duration prediction for total duration preservation.
+
+> **⚠️ Note:** If the download is interrupted, please delete the partially downloaded file so that it can be downloaded again.
 
 ## Acknowledgements
 

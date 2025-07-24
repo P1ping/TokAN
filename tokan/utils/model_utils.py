@@ -147,22 +147,20 @@ class ModelManager:
 
         total_size = int(response.headers.get("content-length", 0))
 
-        with (
-            open(destination, "wb") as file,
-            tqdm(
-                desc=Path(destination).name,
-                total=total_size,
-                unit="B",
-                unit_scale=True,
-                unit_divisor=1024,
-            ) as bar,
-        ):
-            for data in response.iter_content(chunk_size=1024):
-                size = file.write(data)
-                bar.update(size)
+        with open(destination, "wb") as file:
+            with tqdm(
+                    desc=Path(destination).name,
+                    total=total_size,
+                    unit="B",
+                    unit_scale=True,
+                    unit_divisor=1024,
+                ) as bar:
+                for data in response.iter_content(chunk_size=1024):
+                    size = file.write(data)
+                    bar.update(size)
 
 
-def load_bigvgan(tag_or_ckpt: str = "nvidia/bigvgan_base_22khz_80band", device: str = "cuda"):
+def load_bigvgan(tag_or_ckpt: str, device: str = "cuda"):
     """
     Load BigVGAN model from a tag or checkpoint.
 
@@ -174,9 +172,9 @@ def load_bigvgan(tag_or_ckpt: str = "nvidia/bigvgan_base_22khz_80band", device: 
     Returns:
         Loaded BigVGAN model
     """
-    try:
+    if tag_or_ckpt.startswith("nvidia/"):
         vocoder = bigvgan.BigVGAN.from_pretrained(tag_or_ckpt, device=device)
-    except (ValueError, Exception) as e:
+    else:
         exp_dir = os.path.dirname(tag_or_ckpt)
         config_path = os.path.join(exp_dir, "config.json")
 
@@ -209,4 +207,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Error ensuring model availability for '{model_key}': {e}")
 
-    _ = load_bigvgan("bigvgan", "cpu")
+    _ = load_bigvgan("nvidia/bigvgan_base_22khz_80band", "cpu")

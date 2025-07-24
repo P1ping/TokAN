@@ -1,5 +1,5 @@
 # --------- pytorch --------- #
-torch>=2.0.0
+torch<=2.5.1
 torchvision>=0.15.0
 lightning>=2.0.0
 torchmetrics>=0.11.4
@@ -32,7 +32,12 @@ conformer==0.3.2
 diffusers # developed using version ==0.25.0
 notebook
 ipywidgets
-gradio==3.43.2
+huggingface-hub
 gdown
 wget
 seaborn
+transformers<=4.43.3
+speechbrain==0.5.16 # for pretrained accent encoder
+resemblyzer
+amfm_decompy
+silero_vad
