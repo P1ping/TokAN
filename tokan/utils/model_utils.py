@@ -41,7 +41,7 @@ class ModelManager:
             "revision": "main",
             "file_path": "token_to_token/tokan-t2t-base-paper/model.pt",
             "local_dir": BASE_DIR,
-            "auxiliary_files": ["dict.src.txt", "dict.tgt.txt"],
+            "auxiliary_files": ["dict.src.txt", "dict.tgt.txt", "dict.aux.txt", "accents.src.txt"],
         },
         "token_to_mel_v1": {  # Regression-based duration predictor
             "repo_id": "Piping/TokAN",
