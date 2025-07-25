@@ -172,24 +172,48 @@ def load_bigvgan(tag_or_ckpt: str, device: str = "cuda"):
     Returns:
         Loaded BigVGAN model
     """
-    if tag_or_ckpt.startswith("nvidia/"):
-        vocoder = bigvgan.BigVGAN.from_pretrained(tag_or_ckpt, device=device)
+    logger.info(f"Loading BigVGAN model: {tag_or_ckpt}")
+    
+    # Check if it's a Hugging Face model tag or local path
+    is_hf_tag = tag_or_ckpt.startswith("nvidia/") and not os.path.exists(tag_or_ckpt)
+    
+    if is_hf_tag:
+        logger.info(f"Detected Hugging Face model tag, loading from hub: {tag_or_ckpt}")
+        try:
+            vocoder = bigvgan.BigVGAN.from_pretrained(tag_or_ckpt)
+        except Exception as e:
+            logger.error(f"Failed to load from Hugging Face: {e}")
+            raise RuntimeError(f"Could not load BigVGAN model from Hugging Face tag '{tag_or_ckpt}': {e}")
     else:
+        # Assume it's a local checkpoint
+        logger.info(f"Loading BigVGAN from local checkpoint: {tag_or_ckpt}")
+        
+        if not os.path.exists(tag_or_ckpt):
+            raise FileNotFoundError(f"Local checkpoint file not found: {tag_or_ckpt}")
+        
         exp_dir = os.path.dirname(tag_or_ckpt)
         config_path = os.path.join(exp_dir, "config.json")
+        
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"Config file not found: {config_path}")
+        
+        try:
+            with open(config_path) as f:
+                data = f.read()
+            json_config = json.loads(data)
+            h = AttrDict(json_config)
 
-        with open(config_path) as f:
-            data = f.read()
-        json_config = json.loads(data)
-        h = AttrDict(json_config)
+            vocoder = bigvgan.BigVGAN(h)
 
-        vocoder = bigvgan.BigVGAN(h).to(device)
+            state_dict = torch.load(tag_or_ckpt, map_location="cpu")
+            vocoder.load_state_dict(state_dict["generator"])
+            
+        except Exception as e:
+            logger.error(f"Failed to load local checkpoint: {e}")
+            raise RuntimeError(f"Could not load BigVGAN model from local checkpoint '{tag_or_ckpt}': {e}")
 
-        state_dict = torch.load(tag_or_ckpt, map_location=device)
-        vocoder.load_state_dict(state_dict["generator"])
-
-        vocoder.eval()
-        vocoder.remove_weight_norm()
+    vocoder = vocoder.eval().to(device)
+    vocoder.remove_weight_norm()
 
     for param in vocoder.parameters():
         param.requires_grad = False
