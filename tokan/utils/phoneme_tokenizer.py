@@ -1,3 +1,8 @@
+# Copyright (c) 2025 TokAN Project
+# TokAN: Token-based Accent Conversion
+#
+# Licensed under the MIT License - see LICENSE file for details
+
 import re
 
 from collections import defaultdict, OrderedDict
@@ -6,7 +11,6 @@ from typing import Optional, Union, List, Pattern
 from phonemizer.phonemize import _phonemize
 from phonemizer.backend import EspeakBackend
 from phonemizer.punctuation import Punctuation
-from phonemizer.logger import get_logger
 from phonemizer.separator import Separator
 
 import logging

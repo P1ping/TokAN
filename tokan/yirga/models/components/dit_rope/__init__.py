@@ -1,3 +1,9 @@
+# Copyright (c) 2025 TokAN Project
+# Original implementation by Zhijun Liu
+# Adapted for TokAN: Token-based Accent Conversion
+#
+# Licensed under the MIT License - see LICENSE file for details
+
 import torch
 from torch import nn, Tensor, BoolTensor
 from torch.nn import Conv2d
@@ -52,18 +58,12 @@ class DiTDecoder(nn.Module):
         self.dit = DiT(D, D_hidden, N_head, N_layer, P_dropout)
 
         if D_bridge > 0:
-            assert (
-                D_conv2d > 0
-            ), '"D_conv2d" should be greater than 0 when "D_bridge" set.'
+            assert D_conv2d > 0, '"D_conv2d" should be greater than 0 when "D_bridge" set.'
             self.bridge_linear = nn.Linear(D, D_bridge * D_mel)
             self.cond_linear = nn.Linear(D_cond, D_mel)
             self.bridge_conv2d = Conv2d(D_bridge + 2, D_conv2d, 3, 1, 1)
-            self.resblock_2d = nn.Sequential(
-                ResBlock2d(D_conv2d, kernel=3), ResBlock2d(D_conv2d, kernel=3)
-            )
-            self.last_conv2d = nn.Sequential(
-                nn.LeakyReLU(LRELU_SLOPE), Conv2d(D_conv2d, 1, 3, 1, 1)
-            )
+            self.resblock_2d = nn.Sequential(ResBlock2d(D_conv2d, kernel=3), ResBlock2d(D_conv2d, kernel=3))
+            self.last_conv2d = nn.Sequential(nn.LeakyReLU(LRELU_SLOPE), Conv2d(D_conv2d, 1, 3, 1, 1))
             self.output_linear = None
         else:
             self.bridge_linear = None
@@ -104,9 +104,7 @@ class DiTDecoder(nn.Module):
         # [N, T, D_bridge, D_mel]
         x = x.transpose(-2, -3).contiguous()  # [N, D_bridge, T, D_mel]
         w_mel = self.cond_linear(w)  # [N, T, D_mel]
-        x = torch.cat(
-            [x_res.unsqueeze(-3), w_mel.unsqueeze(-3), x], dim=-3
-        )  # [N, D_bridge + 2, T, D_mel]
+        x = torch.cat([x_res.unsqueeze(-3), w_mel.unsqueeze(-3), x], dim=-3)  # [N, D_bridge + 2, T, D_mel]
 
         x = self.bridge_conv2d.forward(x)
         x = self.resblock_2d.forward(x)

@@ -1,10 +1,15 @@
+# Copyright (c) 2025 TokAN Project
+# TokAN: Token-based Accent Conversion
+#
+# Licensed under the MIT License - see LICENSE file for details
+
 import logging
 from typing import Optional, Dict, Tuple
 
 import torch
 from torch import nn
 from torch.nn.functional import layer_norm
-from einops import rearrange, repeat
+from einops import rearrange
 
 from fairseq import utils
 from fairseq.distributed import fsdp_wrap

@@ -1,7 +1,13 @@
+# Copyright (c) 2025 TokAN Project
+# Original implementation by Zhijun Liu
+# Adapted for TokAN: Token-based Accent Conversion
+#
+# Licensed under the MIT License - see LICENSE file for details
+
 import torch
 from torch import nn, Tensor, BoolTensor
 from torch.nn.functional import dropout
-from typing import Tuple, Optional
+from typing import Tuple
 from math import sqrt
 
 
@@ -14,9 +20,7 @@ def compute_r(p: Tensor, C: int, theta: float = 10000.0) -> Tensor:
     Returns:
         r (Tensor): [N, T, C // 2].
     """
-    s = (
-        torch.arange(0, C, 2, dtype=torch.float32, device=p.device)[: (C // 2)] / C
-    )  # [C // 2]
+    s = torch.arange(0, C, 2, dtype=torch.float32, device=p.device)[: (C // 2)] / C  # [C // 2]
     m = 1.0 / (theta**s)  # [C // 2]
     diff_dim = len(p.shape) - 1
     r = m.view(*(1,) * diff_dim, -1) * p.float().unsqueeze(-1)  # [N, T, C // 2]
@@ -92,9 +96,7 @@ class RoPESelfAttention(nn.Module):
         # [N, H, T, C]
         return q, k, v
 
-    def forward(
-        self, x: Tensor, r: Tensor, mask: BoolTensor
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    def forward(self, x: Tensor, r: Tensor, mask: BoolTensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Compute self-attention.
         Args:
             x (Tensor): [N, T, D].

@@ -1,5 +1,10 @@
+# Copyright (c) 2025 TokAN Project
+# TokAN: Token-based Accent Conversion
+# Modified from Matcha-TTS's matcha_tts.py
+#
+# Licensed under the MIT License - see LICENSE file for details
+
 import datetime as dt
-import math
 
 import torch
 import torch.nn.functional as F

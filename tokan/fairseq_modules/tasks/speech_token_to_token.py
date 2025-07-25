@@ -1,21 +1,13 @@
 # Most code from fairseq/tasks/translation.py
 
 from dataclasses import dataclass, field
-import itertools
-import json
 import logging
 import os
 from typing import Optional
-from argparse import Namespace
-from omegaconf import II
 
-import numpy as np
 from fairseq import utils
-from fairseq.logging import metrics
 from fairseq.data import (
-    ConcatDataset,
     data_utils,
-    indexed_dataset,
 )
 
 from ..data.speech_token_to_token_dataset import (
@@ -23,8 +15,7 @@ from ..data.speech_token_to_token_dataset import (
     SpeechTokenToTokenDatasetCreator,
 )
 from ..data.ctc_dictionary import CTCDictionary
-from fairseq.data.indexed_dataset import get_available_dataset_impl
-from fairseq.dataclass import ChoiceEnum, FairseqDataclass
+from fairseq.dataclass import FairseqDataclass
 from fairseq.tasks import FairseqTask, register_task
 
 
@@ -165,15 +156,6 @@ class SpeechTokenTranslation(FairseqTask):
             src_tokens,
             src_lengths,
         )
-
-    # def build_dataset_for_inference(self, src_tokens, src_lengths, constraints=None):
-    #     return LanguagePairDataset(
-    #         src_tokens,
-    #         src_lengths,
-    #         self.source_dictionary,
-    #         tgt_dict=self.target_dictionary,
-    #         constraints=constraints,
-    #     )
 
     def build_model(self, cfg, from_checkpoint=False):
         if cfg.load_src_accent:

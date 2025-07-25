@@ -1,5 +1,9 @@
-import re
-import csv
+# Copyright (c) 2025 TokAN Project
+# TokAN: Token-based Accent Conversion
+# Based on fairseq's speech_to_text_dataset.py
+#
+# Licensed under the MIT License - see LICENSE file for details
+
 import math
 import logging
 from pathlib import Path
@@ -8,7 +12,6 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 
 import torch
-import torch.nn.functional as F
 
 from fairseq.data import Dictionary
 from fairseq.data import data_utils

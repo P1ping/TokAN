@@ -86,10 +86,13 @@ This will automatically download all required models and perform accent conversi
 
 ## Acknowledgements
 
+This work was conducted at Tencent TEA-Lab.
+
 This project leverages several excellent open-source projects:
 
 - [Fairseq](https://github.com/facebookresearch/fairseq): For training the accent-removal model
 - [Matcha-TTS](https://github.com/shivammehta25/Matcha-TTS): For text-to-speech synthesis to generate synthetic data
+- [lightning-hydra-template](https://github.com/ashleve/lightning-hydra-template): For speech synthesis training
 - [textlesslib](https://github.com/facebookresearch/textlesslib): For extract HuBERT tokens
 - [BigVGAN](https://github.com/NVIDIA/BigVGAN): For high-quality neural vocoding
 

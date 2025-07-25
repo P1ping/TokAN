@@ -1,7 +1,13 @@
+# Copyright (c) 2025 TokAN Project
+# Original implementation by Zhijun Liu
+# Adapted for TokAN: Token-based Accent Conversion
+#
+# Licensed under the MIT License - see LICENSE file for details
+
 import math
 
 import torch
-from torch import nn, Tensor, IntTensor, BoolTensor
+from torch import nn, Tensor, BoolTensor
 from torch.nn.functional import layer_norm, gelu
 from .rope import RoPESelfAttention
 
@@ -94,7 +100,9 @@ class DiTBlock(nn.Module):
             shift_mlp,
             scale_mlp,
             gate_mlp,
-        ) = self.AdaLN_modulation(c).chunk(6, dim=-1)
+        ) = self.AdaLN_modulation(
+            c
+        ).chunk(6, dim=-1)
         # [N, ..., D]
         x1 = self.attn_norm.forward(x)
         x2 = modulate(x1, shift_msa, scale_msa)
@@ -119,9 +127,7 @@ class DiTBlock(nn.Module):
         state = self.training
         with torch.no_grad():
             self.eval()
-            (shift_msa, scale_msa, _, _, _, _) = self.AdaLN_modulation.forward(c).chunk(
-                6, dim=-1
-            )
+            (shift_msa, scale_msa, _, _, _, _) = self.AdaLN_modulation.forward(c).chunk(6, dim=-1)
             x1 = self.attn_norm.forward(x)
             x2 = modulate(x1, shift_msa, scale_msa)
             attn = self.attn.get_attn(x2, r, mask)
@@ -159,9 +165,9 @@ def encode_scalar(scalar: Tensor, D: int, c: float = 0.1) -> Tensor:
         code (Tensor): [B, D].
     """
     D_half = D // 2
-    frequencies = torch.exp(
-        -math.log(c) * torch.arange(start=0, end=D_half, dtype=torch.float32) / D_half
-    ).to(device=scalar.device)
+    frequencies = torch.exp(-math.log(c) * torch.arange(start=0, end=D_half, dtype=torch.float32) / D_half).to(
+        device=scalar.device
+    )
     args = scalar[:, None].float() * frequencies[None]
     return torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
 
@@ -174,9 +180,7 @@ class ScalarEmbedder(nn.Module):
             D (int): The embedding size.
         """
         super().__init__()
-        self.mlp = nn.Sequential(
-            nn.Linear(F, D, bias=True), nn.SiLU(), nn.Linear(D, D, bias=True)
-        )
+        self.mlp = nn.Sequential(nn.Linear(F, D, bias=True), nn.SiLU(), nn.Linear(D, D, bias=True))
         self.F = F
 
     def forward(self, t: Tensor) -> Tensor:

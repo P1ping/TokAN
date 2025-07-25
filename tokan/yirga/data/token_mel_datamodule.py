@@ -1,3 +1,5 @@
+# Modified from Matcha-TTS for TokAN project
+
 import random
 from typing import Any, Dict, Optional
 

@@ -1,10 +1,15 @@
+# Copyright (c) 2025 TokAN Project
+# TokAN: Token-based Accent Conversion
+#
+# Licensed under the MIT License - see LICENSE file for details
+
 import math
 from collections import OrderedDict
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import nn, Tensor, BoolTensor
+from torch import Tensor, BoolTensor
 from einops import repeat
 
 from tokan.utils import get_pylogger

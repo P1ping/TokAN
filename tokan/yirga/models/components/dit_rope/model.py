@@ -1,7 +1,12 @@
-import math
+# Copyright (c) 2025 TokAN Project
+# Original implementation by Zhijun Liu
+# Adapted for TokAN: Token-based Accent Conversion
+#
+# Licensed under the MIT License - see LICENSE file for details
+
 import torch
 from torch import nn, Tensor, BoolTensor
-from .layers import DiTBlock, FinalLinear, ScalarEmbedder
+from .layers import DiTBlock, ScalarEmbedder
 from .rope import compute_r
 
 
@@ -16,9 +21,7 @@ class DiT(nn.Module):
     ):
         super().__init__()
         self.t_encoder = ScalarEmbedder(256, D)
-        self.blocks = nn.ModuleList(
-            [DiTBlock(D, D_hidden, N_head, P_dropout) for _ in range(N_layer)]
-        )
+        self.blocks = nn.ModuleList([DiTBlock(D, D_hidden, N_head, P_dropout) for _ in range(N_layer)])
         self.C = D // N_head
 
     def forward(self, x: Tensor, p: Tensor, t: Tensor, mask: BoolTensor) -> Tensor:

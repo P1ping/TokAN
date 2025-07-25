@@ -1,3 +1,8 @@
+# Copyright (c) 2025 TokAN Project
+# TokAN: Token-based Accent Conversion
+#
+# Licensed under the MIT License - see LICENSE file for details
+
 import torch
 import torch.nn.functional as F
 from einops import repeat

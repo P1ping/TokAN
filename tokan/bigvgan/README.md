@@ -1,1 +1,0 @@
-This module is leveraged from `https://github.com/NVIDIA/BigVGAN`.
