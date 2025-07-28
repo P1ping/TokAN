@@ -61,7 +61,6 @@ class SpeechTokenToTokenDatasetItem(NamedTuple):
     src_tokens: torch.Tensor
     tgt_tokens: torch.Tensor
     aux_text: torch.Tensor = None
-    src_accent: torch.Tensor = None
     src_wav: Optional[torch.Tensor] = None
     src_embed: Optional[torch.Tensor] = None
 
@@ -76,19 +75,16 @@ class SpeechTokenToTokenDataset(FairseqDataset):
         src_texts: Optional[List[str]] = None,
         tgt_texts: Optional[List[str]] = None,
         aux_texts: Optional[List[str]] = None,
-        src_accents: Optional[List[str]] = None,
         src_embeds: Optional[List[str]] = None,
         ids: Optional[List[str]] = None,
         src_dict: Optional[Dictionary] = None,
         tgt_dict: Optional[Dictionary] = None,
-        src_accent_dict: Optional[dict] = None,
         aux_dict: Optional[Dictionary] = None,
         left_pad_source: bool = False,
         left_pad_target: bool = False,
         append_eos=True,
         load_waveform=False,
         normalize_waveform=False,
-        load_src_accent=False,
         load_src_embed=False,
         load_aux_text=False,
     ):
@@ -103,12 +99,10 @@ class SpeechTokenToTokenDataset(FairseqDataset):
 
         self.src_texts, self.tgt_texts = src_texts, tgt_texts
         self.aux_texts = aux_texts
-        self.src_accents = src_accents
         self.src_embeds = src_embeds
         self.src_dict = src_dict
         self.tgt_dict = tgt_dict
         self.aux_dict = aux_dict
-        self.src_accent_dict = src_accent_dict
         self.left_pad_source = left_pad_source
         self.left_pad_target = left_pad_target
 
@@ -123,7 +117,6 @@ class SpeechTokenToTokenDataset(FairseqDataset):
         self.load_waveform = load_waveform
         self.normalize_waveform = normalize_waveform
 
-        self.load_src_accent = load_src_accent
         self.load_src_embed = load_src_embed
         self.load_aux_text = load_aux_text
 
@@ -195,12 +188,6 @@ class SpeechTokenToTokenDataset(FairseqDataset):
         tokens = self.aux_dict.encode_line(text, add_if_not_exist=False, append_eos=False).long()
         return tokens
 
-    def get_src_accent(self, index: int):
-        assert _is_int_or_np_int(index)
-        accent = self.src_accents[index]
-        accent_label = torch.tensor(self.src_accent_dict[accent]).long()
-        return accent_label
-
     def get_src_embed(self, index: int):
         assert _is_int_or_np_int(index)
         embed_path = self.src_embeds[index]
@@ -250,7 +237,6 @@ class SpeechTokenToTokenDataset(FairseqDataset):
         utt_id = self.ids[index]
 
         src_wav = self._get_source_audio(index) if self.load_waveform else None
-        src_accent = self.get_src_accent(index) if self.load_src_accent else None
         src_embed = self.get_src_embed(index) if self.load_src_embed else None
 
         src_tokens = self.get_src_tokens(index)
@@ -263,7 +249,6 @@ class SpeechTokenToTokenDataset(FairseqDataset):
             src_wav=src_wav,
             src_tokens=src_tokens,
             tgt_tokens=tgt_tokens,
-            src_accent=src_accent,
             src_embed=src_embed,
             aux_text=aux_text,
         )
@@ -277,7 +262,6 @@ class SpeechTokenToTokenDataset(FairseqDataset):
         indices = torch.tensor([x.index for x in samples], dtype=torch.long)
 
         src_wavs = [x.src_wav for x in samples]
-        src_accents = [x.src_accent for x in samples]
         src_embeds = [x.src_embed for x in samples]
         src_tokens = [x.src_tokens for x in samples]
         tgt_tokens = [x.tgt_tokens for x in samples]
@@ -292,10 +276,6 @@ class SpeechTokenToTokenDataset(FairseqDataset):
         if self.load_waveform:
             src_wavs = _collate_frames(src_wavs, is_audio_input=True)
             src_wavs = src_wavs.index_select(0, order)
-
-        if self.load_src_accent:
-            src_accents = torch.stack(src_accents)
-            src_accents = src_accents.index_select(0, order)
 
         if self.load_src_embed:
             src_embeds = torch.stack(src_embeds)
@@ -346,7 +326,6 @@ class SpeechTokenToTokenDataset(FairseqDataset):
             "src_lengths": source_lengths,
             "prev_output_tokens": prev_output_tokens,
             "src_wavs": src_wavs if self.load_waveform else None,
-            "condition_labels": src_accents if self.load_src_accent else None,
             "condition_embeds": src_embeds if self.load_src_embed else None,
         }
         out = {
@@ -396,7 +375,6 @@ class SpeechTokenToTokenDatasetCreator(object):
     KEY_ID, KEY_AUDIO = "id", "src_audio"
     KEY_SRC_TEXT, KEY_TGT_TEXT = "src_tokens", "tgt_tokens"
     # optional columns
-    KEY_SRC_ACT, DEFAULT_ACT = "src_accent", "<ot>"
     KEY_SRC_EMB, DEFAULT_SRC_EMB = "src_embed", None
     KEY_AUX_TEXT, DEFAULT_AUX_TEXT = "aux_text", None
 
@@ -409,11 +387,9 @@ class SpeechTokenToTokenDatasetCreator(object):
         src_dict,
         tgt_dict,
         aux_dict,
-        src_accent_dict,
         left_pad_source,
         left_pad_target,
         load_waveform,
-        load_src_accent,
         load_src_embed,
         load_aux_text,
     ) -> SpeechTokenToTokenDataset:
@@ -422,7 +398,6 @@ class SpeechTokenToTokenDatasetCreator(object):
         src_texts = [s[cls.KEY_SRC_TEXT] for s in samples]
         tgt_texts = [s[cls.KEY_TGT_TEXT] for s in samples]
         aux_texts = [s.get(cls.KEY_AUX_TEXT, cls.DEFAULT_AUX_TEXT) for s in samples]
-        src_accents = [s.get(cls.KEY_SRC_ACT, cls.DEFAULT_ACT) for s in samples]
         src_embeds = [s.get(cls.KEY_SRC_EMB, cls.DEFAULT_SRC_EMB) for s in samples]
 
         ds = SpeechTokenToTokenDataset(
@@ -432,17 +407,14 @@ class SpeechTokenToTokenDatasetCreator(object):
             src_texts=src_texts,
             tgt_texts=tgt_texts,
             aux_texts=aux_texts,
-            src_accents=src_accents,
             src_embeds=src_embeds,
             ids=ids,
             src_dict=src_dict,
             tgt_dict=tgt_dict,
             aux_dict=aux_dict,
-            src_accent_dict=src_accent_dict,
             left_pad_source=left_pad_source,
             left_pad_target=left_pad_target,
             load_waveform=load_waveform,
-            load_src_accent=load_src_accent,
             load_src_embed=load_src_embed,
             load_aux_text=load_aux_text,
         )
@@ -476,11 +448,9 @@ class SpeechTokenToTokenDatasetCreator(object):
         src_dict: Dictionary,
         tgt_dict: Dictionary,
         aux_dict: Dictionary,
-        src_accent_dict: dict,
         left_pad_source: bool,
         left_pad_target: bool,
         load_waveform: bool,
-        load_src_accent: bool,
         load_src_embed: bool,
         load_aux_text: bool,
     ) -> SpeechTokenToTokenDataset:
@@ -492,11 +462,9 @@ class SpeechTokenToTokenDatasetCreator(object):
             src_dict,
             tgt_dict,
             aux_dict,
-            src_accent_dict,
             left_pad_source,
             left_pad_target,
             load_waveform,
-            load_src_accent,
             load_src_embed,
             load_aux_text,
         )

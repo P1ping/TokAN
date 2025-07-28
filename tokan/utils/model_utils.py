@@ -41,7 +41,7 @@ class ModelManager:
             "revision": "main",
             "file_path": "token_to_token/tokan-t2t-base-paper/model.pt",
             "local_dir": BASE_DIR,
-            "auxiliary_files": ["dict.src.txt", "dict.tgt.txt", "dict.aux.txt", "accents.src.txt"],
+            "auxiliary_files": ["dict.src.txt", "dict.tgt.txt", "dict.aux.txt"],
         },
         "token_to_mel_v1": {  # Regression-based duration predictor
             "repo_id": "Piping/TokAN",
@@ -149,12 +149,12 @@ class ModelManager:
 
         with open(destination, "wb") as file:
             with tqdm(
-                    desc=Path(destination).name,
-                    total=total_size,
-                    unit="B",
-                    unit_scale=True,
-                    unit_divisor=1024,
-                ) as bar:
+                desc=Path(destination).name,
+                total=total_size,
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+            ) as bar:
                 for data in response.iter_content(chunk_size=1024):
                     size = file.write(data)
                     bar.update(size)
@@ -173,10 +173,10 @@ def load_bigvgan(tag_or_ckpt: str, device: str = "cuda"):
         Loaded BigVGAN model
     """
     logger.info(f"Loading BigVGAN model: {tag_or_ckpt}")
-    
+
     # Check if it's a Hugging Face model tag or local path
     is_hf_tag = tag_or_ckpt.startswith("nvidia/") and not os.path.exists(tag_or_ckpt)
-    
+
     if is_hf_tag:
         logger.info(f"Detected Hugging Face model tag, loading from hub: {tag_or_ckpt}")
         try:
@@ -187,16 +187,16 @@ def load_bigvgan(tag_or_ckpt: str, device: str = "cuda"):
     else:
         # Assume it's a local checkpoint
         logger.info(f"Loading BigVGAN from local checkpoint: {tag_or_ckpt}")
-        
+
         if not os.path.exists(tag_or_ckpt):
             raise FileNotFoundError(f"Local checkpoint file not found: {tag_or_ckpt}")
-        
+
         exp_dir = os.path.dirname(tag_or_ckpt)
         config_path = os.path.join(exp_dir, "config.json")
-        
+
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Config file not found: {config_path}")
-        
+
         try:
             with open(config_path) as f:
                 data = f.read()
@@ -207,7 +207,7 @@ def load_bigvgan(tag_or_ckpt: str, device: str = "cuda"):
 
             state_dict = torch.load(tag_or_ckpt, map_location="cpu")
             vocoder.load_state_dict(state_dict["generator"])
-            
+
         except Exception as e:
             logger.error(f"Failed to load local checkpoint: {e}")
             raise RuntimeError(f"Could not load BigVGAN model from local checkpoint '{tag_or_ckpt}': {e}")

@@ -51,13 +51,8 @@ class SpeechTokenTranslationConfig(FairseqDataclass):
     max_source_positions: int = field(default=1024, metadata={"help": "max number of tokens in the source sequence"})
     max_target_positions: int = field(default=1024, metadata={"help": "max number of tokens in the target sequence"})
     load_waveform: bool = field(default=False, metadata={"help": "whether to load additional waveform"})
-    load_src_accent: bool = field(default=False, metadata={"help": "whether to load source accent"})
     load_src_embed: bool = field(default=False, metadata={"help": "whether to load source embedding"})
     load_aux_text: bool = field(default=False, metadata={"help": "whether to load auxiliary text"})
-    # upsample_primary: int = field(
-    #     default=-1, metadata={"help": "the amount of upsample primary dataset"}
-    # )
-    # train_subset: str = II("dataset.train_subset")
 
 
 @register_task("speech_token_to_token", dataclass=SpeechTokenTranslationConfig)
@@ -77,11 +72,10 @@ class SpeechTokenTranslation(FairseqTask):
 
     cfg: SpeechTokenTranslationConfig
 
-    def __init__(self, cfg: SpeechTokenTranslationConfig, src_dict, tgt_dict, src_accent_dict=None, aux_dict=None):
+    def __init__(self, cfg: SpeechTokenTranslationConfig, src_dict, tgt_dict, aux_dict=None):
         super().__init__(cfg)
         self.src_dict = src_dict
         self.tgt_dict = tgt_dict
-        self.src_accent_dict = src_accent_dict
         self.aux_dict = aux_dict
 
     @classmethod
@@ -109,17 +103,13 @@ class SpeechTokenTranslation(FairseqTask):
         logger.info("[{}] dictionary: {} types".format(cfg.source_lang, len(src_dict)))
         logger.info("[{}] dictionary: {} types".format(cfg.target_lang, len(tgt_dict)))
 
-        src_accent_dict_path = os.path.join(paths[0], "accents.src.txt")
-        src_accent_dict = cls.load_accent_dictionary(src_accent_dict_path)
-        logger.info(f"[{cfg.source_lang}] accent dictionary: {len(src_accent_dict)} types")
-
         if cfg.load_aux_text:
             aux_dict = cls.load_ctc_dictionary(os.path.join(paths[0], f"dict.{cfg.aux_text_tag}.txt"))
             logger.info(f"[{cfg.aux_text_tag}] dictionary: {len(aux_dict)} types (blank_idx={aux_dict.blank()})")
         else:
             aux_dict = None
 
-        return cls(cfg, src_dict, tgt_dict, src_accent_dict, aux_dict)
+        return cls(cfg, src_dict, tgt_dict, aux_dict)
 
     def load_dataset(self, split, epoch=1, combine=False, **kwargs):
         is_train_split = split.startswith("train")
@@ -130,23 +120,12 @@ class SpeechTokenTranslation(FairseqTask):
             src_dict=self.src_dict,
             tgt_dict=self.tgt_dict,
             aux_dict=self.aux_dict,
-            src_accent_dict=self.src_accent_dict,
             left_pad_source=self.cfg.left_pad_source,
             left_pad_target=self.cfg.left_pad_target,
             load_waveform=self.cfg.load_waveform,
-            load_src_accent=self.cfg.load_src_accent,
             load_src_embed=self.cfg.load_src_embed,
             load_aux_text=self.cfg.load_aux_text,
         )
-
-    @classmethod
-    def load_accent_dictionary(self, path):
-        d = {}
-        with open(path, "r") as f:
-            for line in f:
-                token, count = line.strip().split()
-                d[token] = len(d)
-        return d
 
     def build_dataset_for_inference(self, src_tokens, src_lengths, audio_paths, constraints=None, **kwargs):
         return SpeechTokenToTokenDataset(
@@ -158,9 +137,6 @@ class SpeechTokenTranslation(FairseqTask):
         )
 
     def build_model(self, cfg, from_checkpoint=False):
-        if cfg.load_src_accent:
-            cfg.num_conditions = len(self.src_accent_dict)
-            logger.info(f"Update model config with num_conditions={cfg.num_conditions}")
         if cfg.load_aux_text:
             cfg.num_ctc_classes = len(self.aux_dict)
             logger.info(f"Update model config with num_classes={cfg.num_ctc_classes}")

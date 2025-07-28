@@ -51,13 +51,12 @@ class SpeechTokenDenoising(SpeechTokenTranslation):
 
     Args:
         src_dict (~fairseq.data.Dictionary): dictionary for the source speech
-        src_accent_dict (~fairseq.data.Dictionary): dictionary for the source speech
     """
 
     cfg: SpeechTokenDenoisingConfig
 
-    def __init__(self, cfg: SpeechTokenDenoisingConfig, src_dict, src_accent_dict=None, aux_dict=None):
-        super().__init__(cfg, src_dict, src_dict, src_accent_dict, aux_dict)
+    def __init__(self, cfg: SpeechTokenDenoisingConfig, src_dict, aux_dict=None):
+        super().__init__(cfg, src_dict, src_dict, aux_dict)
 
     @classmethod
     def setup_task(cls, cfg: SpeechTokenDenoisingConfig, **kwargs):
@@ -76,17 +75,13 @@ class SpeechTokenDenoising(SpeechTokenTranslation):
         mask_idx = src_dict.add_symbol("<mask>")
         logger.info("[{}] dictionary: {} types, mask_idx: {}".format(cfg.source_lang, len(src_dict), mask_idx))
 
-        src_accent_dict_path = os.path.join(paths[0], "accents.src.txt")
-        src_accent_dict = cls.load_accent_dictionary(src_accent_dict_path)
-        logger.info(f"[{cfg.source_lang}] accent dictionary: {len(src_accent_dict)} types")
-
         if cfg.load_aux_text:
             aux_dict = cls.load_ctc_dictionary(os.path.join(paths[0], f"dict.{cfg.aux_text_tag}.txt"))
             logger.info(f"[{cfg.aux_text_tag}] dictionary: {len(aux_dict)} types (blank_idx={aux_dict.blank()})")
         else:
             aux_dict = None
 
-        return cls(cfg, src_dict, src_accent_dict, aux_dict)
+        return cls(cfg, src_dict, aux_dict)
 
     def load_dataset(self, split, epoch=1, combine=False, **kwargs):
         is_train_split = split.startswith("train")
@@ -96,11 +91,9 @@ class SpeechTokenDenoising(SpeechTokenTranslation):
             is_train_split=is_train_split,
             src_dict=self.src_dict,
             aux_dict=self.aux_dict,
-            src_accent_dict=self.src_accent_dict,
             left_pad_source=self.cfg.left_pad_source,
             left_pad_target=self.cfg.left_pad_target,
             load_waveform=self.cfg.load_waveform,
-            load_src_accent=self.cfg.load_src_accent,
             load_src_embed=self.cfg.load_src_embed,
             load_aux_text=self.cfg.load_aux_text,
             poisson_lambda=self.cfg.poisson_lambda,

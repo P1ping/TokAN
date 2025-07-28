@@ -37,18 +37,15 @@ class SpeechTokenDenoisingDataset(SpeechTokenToTokenDataset):
         audio_paths: List[str] = None,
         src_texts: Optional[List[str]] = None,
         aux_texts: Optional[List[str]] = None,
-        src_accents: Optional[List[str]] = None,
         src_embeds: Optional[List[str]] = None,
         ids: Optional[List[str]] = None,
         src_dict: Optional[Dictionary] = None,
         aux_dict: Optional[Dictionary] = None,
-        src_accent_dict: Optional[dict] = None,
         left_pad_source: bool = False,
         left_pad_target: bool = False,
         append_eos=True,
         load_waveform=False,
         normalize_waveform=False,
-        load_src_accent=False,
         load_src_embed=False,
         load_aux_text=False,
         poisson_lambda=3.0,
@@ -77,12 +74,10 @@ class SpeechTokenDenoisingDataset(SpeechTokenToTokenDataset):
 
         self.src_texts = src_texts
         self.aux_texts = aux_texts
-        self.src_accents = src_accents
         self.src_embeds = src_embeds
         self.src_dict = src_dict
         self.tgt_dict = src_dict  # for denoising, src and tgt are the same
         self.aux_dict = aux_dict
-        self.src_accent_dict = src_accent_dict
         self.left_pad_source = left_pad_source
         self.left_pad_target = left_pad_target
 
@@ -96,7 +91,6 @@ class SpeechTokenDenoisingDataset(SpeechTokenToTokenDataset):
         self.load_waveform = load_waveform
         self.normalize_waveform = normalize_waveform
 
-        self.load_src_accent = load_src_accent
         self.load_src_embed = load_src_embed
         self.load_aux_text = load_aux_text
 
@@ -254,7 +248,6 @@ class SpeechTokenDenoisingDataset(SpeechTokenToTokenDataset):
         utt_id = self.ids[index]
 
         src_wav = self._get_source_audio(index) if self.load_waveform else None
-        src_accent = self.get_src_accent(index) if self.load_src_accent else None
         src_embed = self.get_src_embed(index) if self.load_src_embed else None
 
         src_tokens, tgt_tokens = self.get_src_tgt_tokens(index)
@@ -266,7 +259,6 @@ class SpeechTokenDenoisingDataset(SpeechTokenToTokenDataset):
             src_wav=src_wav,
             src_tokens=src_tokens,
             tgt_tokens=tgt_tokens,
-            src_accent=src_accent,
             src_embed=src_embed,
             aux_text=aux_text,
         )
@@ -303,7 +295,6 @@ class SpeechTokenDenoisingDatasetCreator(SpeechTokenToTokenDatasetCreator):
     KEY_ID, KEY_AUDIO = "id", "src_audio"
     KEY_SRC_TEXT, KEY_TGT_TEXT = "src_tokens", "tgt_tokens"
     # optional columns
-    KEY_SRC_ACT, DEFAULT_ACT = "src_accent", "<ot>"
     KEY_SRC_EMB, DEFAULT_SRC_EMB = "src_embed", None
     KEY_AUX_TEXT, DEFAULT_AUX_TEXT = "aux_text", None
 
@@ -315,11 +306,9 @@ class SpeechTokenDenoisingDatasetCreator(SpeechTokenToTokenDatasetCreator):
         samples: List[Dict],
         src_dict,
         aux_dict,
-        src_accent_dict,
         left_pad_source,
         left_pad_target,
         load_waveform,
-        load_src_accent,
         load_src_embed,
         load_aux_text,
         poisson_lambda,
@@ -332,7 +321,6 @@ class SpeechTokenDenoisingDatasetCreator(SpeechTokenToTokenDatasetCreator):
         audio_paths = [Path(s[cls.KEY_AUDIO]).as_posix() for s in samples]
         src_texts = [s[cls.KEY_SRC_TEXT] for s in samples]
         aux_texts = [s.get(cls.KEY_AUX_TEXT, cls.DEFAULT_AUX_TEXT) for s in samples]
-        src_accents = [s.get(cls.KEY_SRC_ACT, cls.DEFAULT_ACT) for s in samples]
         src_embeds = [s.get(cls.KEY_SRC_EMB, cls.DEFAULT_SRC_EMB) for s in samples]
 
         ds = SpeechTokenDenoisingDataset(
@@ -341,16 +329,13 @@ class SpeechTokenDenoisingDatasetCreator(SpeechTokenToTokenDatasetCreator):
             audio_paths=audio_paths,
             src_texts=src_texts,
             aux_texts=aux_texts,
-            src_accents=src_accents,
             src_embeds=src_embeds,
             ids=ids,
             src_dict=src_dict,
             aux_dict=aux_dict,
-            src_accent_dict=src_accent_dict,
             left_pad_source=left_pad_source,
             left_pad_target=left_pad_target,
             load_waveform=load_waveform,
-            load_src_accent=load_src_accent,
             load_src_embed=load_src_embed,
             load_aux_text=load_aux_text,
             poisson_lambda=poisson_lambda,
@@ -369,11 +354,9 @@ class SpeechTokenDenoisingDatasetCreator(SpeechTokenToTokenDatasetCreator):
         is_train_split: bool,
         src_dict: Dictionary,
         aux_dict: Dictionary,
-        src_accent_dict: dict,
         left_pad_source: bool,
         left_pad_target: bool,
         load_waveform: bool,
-        load_src_accent: bool,
         load_src_embed: bool,
         load_aux_text: bool,
         poisson_lambda: float,
@@ -389,11 +372,9 @@ class SpeechTokenDenoisingDatasetCreator(SpeechTokenToTokenDatasetCreator):
             samples,
             src_dict,
             aux_dict,
-            src_accent_dict,
             left_pad_source,
             left_pad_target,
             load_waveform,
-            load_src_accent,
             load_src_embed,
             load_aux_text,
             poisson_lambda,
