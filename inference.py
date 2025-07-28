@@ -567,7 +567,7 @@ def main():
         synthesis_model = args.synthesis_model or ModelManager.ensure_model_available(
             "token_to_mel_v2" if args.preserve_duration else "token_to_mel_v1"
         )
-        bigvgan_model = args.bigvgan_tag_or_ckpt or "nvidia/bigvgan_base_22khz_80band"
+        bigvgan_model = args.bigvgan_tag_or_ckpt or "nvidia/bigvgan_22khz_80band"
     else:
         # Use specified paths
         hubert_model = args.hubert_model

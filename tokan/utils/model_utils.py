@@ -165,7 +165,7 @@ def load_bigvgan(tag_or_ckpt: str, device: str = "cuda"):
     Load BigVGAN model from a tag or checkpoint.
 
     Args:
-        tag_or_ckpt: Either a Hugging Face model tag (e.g., 'nvidia/bigvgan_base_22khz_80band')
+        tag_or_ckpt: Either a Hugging Face model tag (e.g., 'nvidia/bigvgan_22khz_80band')
                     or a path to a local checkpoint file
         device: Device to load the model onto
 
@@ -231,4 +231,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Error ensuring model availability for '{model_key}': {e}")
 
-    _ = load_bigvgan("nvidia/bigvgan_base_22khz_80band", "cpu")
+    _ = load_bigvgan("nvidia/bigvgan_22khz_80band", "cpu")
