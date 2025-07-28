@@ -20,10 +20,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Constants
-MEL_SAMPLING_RATE = 22050
-MEL_HOP_SIZE = 256
-
 
 class AudioProcessor:
     """Handles audio processing, segmentation and VAD."""
@@ -127,7 +123,9 @@ class AudioProcessor:
 
         return wav_list
 
-    def concatenate_waveforms(self, wav_list: List[Tensor], source_timestamps: List[Dict[str, float]]) -> Tensor:
+    def concatenate_waveforms(
+        self, wav_list: List[Tensor], source_timestamps: List[Dict[str, float]], sampling_rate: int
+    ) -> Tensor:
         """Concatenate waveforms with silence based on timestamps."""
         assert len(wav_list) == len(source_timestamps), "Mismatch between wav_list and timestamps length"
 
@@ -137,7 +135,7 @@ class AudioProcessor:
         for wav, chunk in zip(wav_list, source_timestamps):
             sil_duration = chunk["start"] - prev_end
             if sil_duration > 0:
-                silence = torch.zeros(int(sil_duration * MEL_SAMPLING_RATE)).to(self.device)
+                silence = torch.zeros(int(sil_duration * sampling_rate)).to(self.device)
                 concat_list.append(silence)
             concat_list.append(wav.squeeze().to(self.device))
             prev_end = chunk["end"]
@@ -320,6 +318,8 @@ class MelSynthesizer:
         speaker_embedding: Tensor,
         duration_list: Optional[List[float]] = None,
         preserve_duration: bool = False,
+        hop_size: int = 256,
+        sampling_rate: int = 22050,
     ) -> List[Tensor]:
         """Synthesize mel spectrograms from tokens."""
         if self._model is None:
@@ -331,9 +331,7 @@ class MelSynthesizer:
             # Calculate duration if needed
             total_duration = None
             if preserve_duration and duration_list is not None:
-                total_duration = (
-                    torch.tensor(duration_list[idx] * MEL_SAMPLING_RATE // MEL_HOP_SIZE).long().to(self.device)
-                )
+                total_duration = torch.tensor(duration_list[idx] * sampling_rate // hop_size).long().to(self.device)
 
             # Run model
             t2m_output = self._model.synthesise(
@@ -359,6 +357,14 @@ class Vocoder:
         self.bigvgan_tag_or_ckpt = bigvgan_tag_or_ckpt
         self.device = device
         self._vocoder = None
+
+    def hop_size(self) -> int:
+        """Return the hop size of the vocoder."""
+        return self._vocoder.h["hop_size"]
+
+    def sampling_rate(self) -> int:
+        """Return the sampling rate of the vocoder."""
+        return self._vocoder.h["sampling_rate"]
 
     def setup(self) -> None:
         """Load the vocoder model."""
@@ -464,15 +470,19 @@ class AccentConverter:
             spk_embed,
             duration_list=duration_list,
             preserve_duration=self.config["preserve_duration"],
+            hop_size=self.vocoder.hop_size(),
+            sampling_rate=self.vocoder.sampling_rate(),
         )
 
         # Step 6: Generate waveforms and concatenate
         converted_wav_list = self.vocoder.generate_waveforms(mel_list)
-        converted_wav = self.audio_processor.concatenate_waveforms(converted_wav_list, timestamps)
+        converted_wav = self.audio_processor.concatenate_waveforms(
+            converted_wav_list, timestamps, self.vocoder.sampling_rate()
+        )
 
         # Save output
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        torchaudio.save(output_path, converted_wav.cpu(), MEL_SAMPLING_RATE)
+        torchaudio.save(output_path, converted_wav.cpu(), self.vocoder.sampling_rate())
         logger.info(f"Converted audio saved to {output_path}")
 
         # Save debug outputs if verbose mode is enabled
@@ -502,7 +512,9 @@ class AccentConverter:
             original_wav = original_wav.unsqueeze(0).cpu()
             converted_wav = converted_wav.cpu()
             torchaudio.save(os.path.join(debug_dir, f"original_{idx}.wav"), original_wav, 16000)
-            torchaudio.save(os.path.join(debug_dir, f"converted_{idx}.wav"), converted_wav, MEL_SAMPLING_RATE)
+            torchaudio.save(
+                os.path.join(debug_dir, f"converted_{idx}.wav"), converted_wav, self.vocoder.sampling_rate()
+            )
 
             # Save token information
             orig_token_str = " ".join([str(t) for t in token_list[idx].tolist()])
