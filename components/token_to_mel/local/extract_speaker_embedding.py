@@ -1,0 +1,1 @@
+../../text_to_mel/local/extract_speaker_embedding.py

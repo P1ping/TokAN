@@ -1,0 +1,23 @@
+_target_: tokan.yirga.data.token_mel_datamodule.TokenMelDataModule
+name: libritts_token
+use_spkemb: True
+use_text: False
+token_rate: 50
+deduplicate: True
+upsample_rate: 1.72265625  # = sample_rate / hop_length / token_rate
+train_metadata_path: null
+valid_metadata_path: null
+batch_size: 10
+num_workers: 20
+pin_memory: True
+n_fft: 1024
+n_feats: 80
+sample_rate: 22050
+hop_length: 256
+win_length: 1024
+f_min: 0
+f_max: 8000
+data_statistics:
+  mel_mean: 0.0
+  mel_std: 1.0
+seed: ${seed}

@@ -20,19 +20,19 @@ kaldiio
 tensorboard
 librosa
 Cython
-numpy
+numpy<=1.26.4
 einops
 inflect
 Unidecode
 scipy
 torchaudio
-matplotlib
+matplotlib<=3.9.2
 pandas
 conformer==0.3.2
-diffusers # developed using version ==0.25.0
+diffusers # tested using version == 0.34.0
 notebook
 ipywidgets
-huggingface-hub
+huggingface-hub # tested using version == 0.32.2
 gdown
 wget
 seaborn
@@ -41,3 +41,7 @@ speechbrain==0.5.16 # for pretrained accent encoder
 resemblyzer
 amfm_decompy
 silero_vad
+jiwer
+pymcd
+fastdtw
+ppgs

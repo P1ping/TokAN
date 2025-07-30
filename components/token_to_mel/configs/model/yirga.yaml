@@ -1,0 +1,16 @@
+defaults:
+  - _self_
+  - encoder: default.yaml
+  - decoder: default.yaml
+  - cfm: default.yaml
+  - optimizer: adam.yaml
+
+_target_: tokan.yirga.models.yirga_token_to_mel.YirgaTokenToMel
+n_vocab: 1000  # Number of HuBERT K-means clusters
+spk_emb_dim: 256
+n_feats: 80
+data_statistics: ${data.data_statistics}
+upsample_rate: ${data.upsample_rate}  # Will be used when `predict_duration` is False
+predict_duration: ${data.deduplicate} # When tokens are duplicated, we need to predict the duration
+training_cfg_rate: 0.2  # Probability of condition dropout (classifier-free guidance)
+inference_cfg_rate: 2.0 # Strength of classifier-free guidance during inference

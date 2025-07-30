@@ -1,0 +1,10 @@
+channels: [384, 384]
+dropout: 0.05
+attention_head_dim: 64
+n_blocks: 2
+num_mid_blocks: 5
+num_heads: 6
+act_fn: snakebeta
+norm_type: "ada_norm_zero"
+cond_dim: ${model.spk_emb_dim}
+cond_dropout: 0.1 # Condition (speaker) dropout rate for AdaNorm

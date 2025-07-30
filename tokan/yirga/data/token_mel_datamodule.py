@@ -19,7 +19,7 @@ from tokan.matcha.utils.model import fix_len_compatibility, normalize
 log = get_pylogger(__name__)
 
 
-def parse_metadata(filelist_path, split_char="\t"):
+def parse_metadata(filelist_path, split_char="|"):
     with open(filelist_path, encoding="utf-8") as f:
         metadata = [line.strip().split(split_char) for line in f]
     return metadata
@@ -182,7 +182,7 @@ class TokenMelDataset(torch.utils.data.Dataset):
         random.shuffle(self.metadata)
 
     def get_datapoint(self, filepath_and_text):
-        utt_id, filepath, text, token_str = filepath_and_text[:4]
+        utt_id, filepath, text, spkemb_path, token_str = filepath_and_text[:5]
 
         mel, audio = self.get_mel_audio(filepath)  # (T', C): floor(T'/k) = T/k
         token = self.get_token(token_str)  # (T/k)
@@ -203,7 +203,6 @@ class TokenMelDataset(torch.utils.data.Dataset):
             text, cleaned_text = None, None
 
         if self.use_spkemb:
-            spkemb_path = filepath_and_text[4]
             spk = self.get_spkemb(spkemb_path)  # (D,)
         else:
             spk = None

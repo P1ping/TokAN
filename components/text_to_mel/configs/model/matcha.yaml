@@ -1,0 +1,18 @@
+defaults:
+  - _self_
+  - encoder: default.yaml
+  - decoder: default.yaml
+  - cfm: default.yaml
+  - optimizer: adam.yaml
+
+_target_: tokan.matcha.models.matcha_tts.MatchaTTS
+n_vocab: 185
+n_spks: ${data.n_spks}
+spk_emb_dim: 256
+n_feats: 80
+data_statistics: ${data.data_statistics}
+out_size: null # Must be divisible by 4
+prior_loss: true
+use_precomputed_durations: ${data.load_durations}
+training_cfg_rate: 0.2  # Probability of condition dropout (classifier-free guidance)
+inference_cfg_rate: 1.0 # Strength of classifier-free guidance during inference

@@ -90,10 +90,6 @@ class YirgaTokenToMel(BaseLightningClass):  # ☕
         force_total_duration=True,
     ):
         """
-        Generates mel-spectrogram from text. Returns:
-            1. encoder outputs
-            2. decoder outputs
-            3. generated alignment
 
         Args:
             x (torch.Tensor): batch of texts, converted to a tensor with phoneme embedding ids.

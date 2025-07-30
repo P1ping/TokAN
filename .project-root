@@ -1,0 +1,3 @@
+# this file is required for inferring the project root directory
+# used for text-to-Mel and token-to-Mel training
+# do not delete
