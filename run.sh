@@ -171,8 +171,8 @@ if [ $stage -le 5 ] && [ $stop_stage -ge 5 ]; then
     echo "Stage 5: Token-to-token conversion fine-tuning"
 
     if [ -z ${text_to_mel_ckpt} ]; then
-        text_to_mel_ckpt=$(pwd)/components/text_to_mel/text_to_mel_experiments/libritts/last.ckpt
-        echo "Using default text-to-Mel checkpoint: ${text_to_mel_ckpt}"
+        echo "Please specify the text-to-Mel checkpoint with --text_to_mel_ckpt"
+        exit 1
     fi
     echo "Synthesizing L1-accented target data for L2ARCTIC -> ${ft_data_dir}/synthetic_target"
     echo "Generating manifests for L2ARCTIC -> ${ft_data_dir}/[train|valid|test].raw.tsv"
@@ -231,7 +231,12 @@ if [ $stage -le 6 ] && [ $stop_stage -ge 6 ]; then
     echo "Decoding tokens..."
     if [ -z ${token_to_token_ckpt} ]; then
         token_to_token_ckpt=$(pwd)/components/token_to_token/experiments/l2arctic_finetune/checkpoint_best.pt
-        echo "Using default token-to-token checkpoint: ${token_to_token_ckpt}"
+        echo "token_to_token_ckpt not specified, using default: ${token_to_token_ckpt}"
+        if [ ! -f ${token_to_token_ckpt} ]; then
+            echo "Token-to-token checkpoint not found: ${token_to_token_ckpt}"
+            echo "Please specify the token-to-token checkpoint with --token_to_token_ckpt"
+            exit 1
+        fi
     fi
     python scripts/generation/fairseq_decode.py \
         ${ft_data_dir} \
@@ -245,8 +250,8 @@ if [ $stage -le 6 ] && [ $stop_stage -ge 6 ]; then
 
     echo "Generating audio from tokens..."
     if [ -z ${token_to_mel_ckpt} ]; then
-        token_to_mel_ckpt=$(pwd)/components/text_to_mel/token_to_mel_experiments/libritts/last.ckpt
-        echo "Using default token-to-Mel checkpoint: ${token_to_mel_ckpt}"
+        echo "Please specify the token-to-Mel checkpoint with --token_to_mel_ckpt"
+        exit 1
     fi
     echo "Please add arguments ---source_duration_scale 1.0 and --force_total_duration if you want to preserve the source total duration"
     python -m torch.distributed.run --nproc_per_node=${nj} \
