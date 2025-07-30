@@ -4,15 +4,6 @@ This repository contains the official implementation and pretrained models for t
 
 **📄 [Paper](https://arxiv.org/abs/2507.17735) | 🎵 [Demo](https://p1ping.github.io/TokAN-Demo/)**
 
-## Project Status: Inference Code Release
-
-This repository currently provides the code and pretrained models required to run **inference** with the TokAN system.
-
-The project is under development, and we are actively working to identify and fix potential bugs.
-
-The code for **training** the models from scratch will be cleaned up and released at a later date.
-
-
 ## Installation
 
 We strongly recommend using a `conda` or `venv` virtual environment with Python 3.8+.
