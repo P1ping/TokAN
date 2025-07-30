@@ -18,7 +18,6 @@ token_to_mel_ckpt=    # Should be specified before evaluation
 bigvgan_tag_or_ckpt="nvidia/bigvgan_22khz_80band"  # Or path to the checkpoint with config.json in the same directory
 
 # Processing, training, and generation parameters
-n_gpus=4    # Number of GPUs for training
 nj=8    # Number of jobs for parallel processing
 
 . scripts/parse_options.sh || exit 1;
@@ -57,12 +56,10 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ]; then
     echo "Training TTS model"
     echo "You can change the configurations (e.g., batch_size) in components/text_to_mel/configs/"
     echo "Checkpoints will be saved in components/text_to_mel/text_to_mel_experiments"
-    devices=$(seq -s, 0 $((n_gpus-1)))
     python components/text_to_mel/train.py \
         experiment=libritts \
         data.train_filelist_path=${text_to_mel_data_dir}/train.list \
-        data.valid_filelist_path=${text_to_mel_data_dir}/valid.list \
-        trainer.devices=[${devices}]
+        data.valid_filelist_path=${text_to_mel_data_dir}/valid.list
 fi
 
 
@@ -99,12 +96,10 @@ if [ $stage -le 3 ] && [ $stop_stage -ge 3 ]; then
     echo "By default, the duration predictor is regression-based, you can switch to flow matching"
     echo " by modifying components/token_to_mel/configs/model/encoder/default.yaml"
     echo "Checkpoints will be saved in components/token_to_mel/token_to_mel_experiments"
-    devices=$(seq -s, 0 $((n_gpus-1)))
     python components/token_to_mel/train.py \
         experiment=libritts_token \
         data.train_metadata_path=${token_to_mel_data_dir}/train.list \
-        data.valid_metadata_path=${token_to_mel_data_dir}/valid.list \
-        trainer.devices=[${devices}]
+        data.valid_metadata_path=${token_to_mel_data_dir}/valid.list
 fi
 
 
