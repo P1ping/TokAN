@@ -146,8 +146,7 @@ l2arctic/
 *For ARCTIC Native Speakers:*
 1. Visit: http://festvox.org/cmu_arctic/
 2. Download: `cmu_us_bdl_arctic.tar.bz2`, `cmu_us_rms_arctic.tar.bz2`, `cmu_us_slt_arctic.tar.bz2`, `cmu_us_clb_arctic.tar.bz2`
-3. Extract to `l2arctic/arctic_native/` directory
-4. Rename with the same pattern as L2ARCTIC
+3. Extract to L2ARCTIC's directory with the same meaning pattern (speaker's tag in the upper case)
 
 #### Data Verification
 Before training, verify your datasets are properly prepared:
