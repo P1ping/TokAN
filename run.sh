@@ -22,17 +22,55 @@ nj=8    # Number of jobs for parallel processing
 
 . scripts/parse_options.sh || exit 1;
 
+export NCCL_DEBUG=WARN
+export NCCL_DEBUG_SUBSYS=OFF
+
 
 if [ $stage -le 0 ] && [ $stop_stage -ge 0 ]; then
     echo "Stage 0: Data preparation"
-    # TODO
+
+    echo "Verifying data directories and completeness..."
+    python scripts/verify_data_preparation.py \
+        --libritts_root ${libritts_root} \
+        --l2arctic_root ${l2arctic_root}
+
+    if [ $? -ne 0 ]; then
+        echo "❌ Data verification failed. Please check the output above for guidance."
+        echo "The verification script provides detailed instructions for downloading missing datasets."
+        exit 1
+    fi
+
+    echo "✅ Data verification completed successfully!"
 fi
 
 
 if [ $stage -le 1 ] && [ $stop_stage -ge 1 ]; then
-    echo "Stage 1: K-means clustering"
-    echo "If you change the number of clusters, please also update n_vocab in components/token_to_mel/configs/model/yirga.yaml"
-    # TODO
+    echo "Stage 1: K-means model check"
+    echo "If you have changed the number of clusters, please also update n_vocab in components/token_to_mel/configs/model/yirga.yaml"
+
+    echo "Checking if HuBERT model exists..."
+    if [ ! -f ${hubert_path} ]; then
+        echo "❌ HuBERT model not found at: ${hubert_path}"
+    else
+        echo "✅ HuBERT model found: ${hubert_path}"
+    fi
+
+    echo "Checking if K-means model exists..."
+    if [ ! -f ${km_path} ]; then
+        echo "⚠️  K-means model not found at: ${km_path}"
+        echo "Expected clusters: ${n_clusters}, HuBERT layer: ${hubert_layer}"
+    else
+        echo "✅ K-means model found: ${km_path}"
+        echo "Clusters: ${n_clusters}, HuBERT layer: ${hubert_layer}"
+    fi
+
+    if [ ! -f ${hubert_path} ] || [ ! -f ${km_path} ]; then
+        echo "❗️ HuBERT or K-means model not found."
+        echo "You can download the pretrained one by running tokan/utils/model_utils.py (see README.md for details) and specify the paths."
+        echo "Alternatively, you can manually train a K-means model (see third_party/fairseq/examples/hubert/simple_kmeans/README.md)."
+    else
+        echo "✅ HuBERT and K-means models are ready."
+    fi
 fi
 
 
@@ -55,7 +93,7 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ]; then
 
     echo "Training TTS model"
     echo "You can change the configurations (e.g., batch_size) in components/text_to_mel/configs/"
-    echo "Checkpoints will be saved in components/text_to_mel/text_to_mel_experiments"
+    echo "Checkpoints will be saved in components/text_to_mel/experiments"
     python components/text_to_mel/train.py \
         experiment=libritts \
         data.train_filelist_path=${text_to_mel_data_dir}/train.list \
@@ -95,7 +133,7 @@ if [ $stage -le 3 ] && [ $stop_stage -ge 3 ]; then
     echo "You can change the configurations (e.g., batch_size) in components/token_to_mel/configs/"
     echo "By default, the duration predictor is regression-based, you can switch to flow matching"
     echo " by modifying components/token_to_mel/configs/model/encoder/default.yaml"
-    echo "Checkpoints will be saved in components/token_to_mel/token_to_mel_experiments"
+    echo "Checkpoints will be saved in components/token_to_mel/experiments"
     python components/token_to_mel/train.py \
         experiment=libritts_token \
         data.train_metadata_path=${token_to_mel_data_dir}/train.list \
