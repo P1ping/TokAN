@@ -7,7 +7,7 @@ deduplicate: True
 upsample_rate: 1.72265625  # = sample_rate / hop_length / token_rate
 train_metadata_path: null
 valid_metadata_path: null
-batch_size: 10
+batch_size: 16  # 16 x 4 GPUs in paper
 num_workers: 20
 pin_memory: True
 n_fft: 1024

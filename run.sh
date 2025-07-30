@@ -17,13 +17,9 @@ token_to_mel_ckpt=    # Should be specified before evaluation
 
 bigvgan_tag_or_ckpt="nvidia/bigvgan_22khz_80band"  # Or path to the checkpoint with config.json in the same directory
 
-# Processing, training, and generation parameters
 nj=8    # Number of jobs for parallel processing
 
 . scripts/parse_options.sh || exit 1;
-
-export NCCL_DEBUG=WARN
-export NCCL_DEBUG_SUBSYS=OFF
 
 
 if [ $stage -le 0 ] && [ $stop_stage -ge 0 ]; then
@@ -188,7 +184,7 @@ if [ $stage -le 4 ] && [ $stop_stage -ge 4 ]; then
         --attention-dropout 0.1 \
         --weight-decay 0.01 \
         --max-tokens 15000 \
-        --update-freq 1 \
+        --update-freq 2 \
         --skip-invalid-size-inputs-valid-test \
         --save-interval-updates 10000 --no-epoch-checkpoints \
         --log-format simple \

@@ -6,9 +6,9 @@ _target_: tokan.matcha.data.text_mel_datamodule.TextMelDataModule
 name: libritts
 n_spks: 0
 use_spkemb: True
-train_filelist_path: data/matcha/text_lt960/train_15s.txt
-valid_filelist_path: data/matcha/text_lt960/valid_15s.txt
-batch_size: 16  # 16 x 4 GPUs
+train_filelist_path: null
+valid_filelist_path: null
+batch_size: 16  # 16 x 4 GPUs in paper
 add_blank: True
 data_statistics:  # Computed for libritts dataset
   mel_mean: 0.0

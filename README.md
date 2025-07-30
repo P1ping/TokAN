@@ -334,6 +334,20 @@ token_to_token_ckpt=$(pwd)/pretrained_models/token_to_token/tokan-t2t-base-paper
 
 > **⚠️ Important:** Ensure k-means model consistency across all components. All models should use the same HuBERT layer (17) and cluster count (1000) for compatibility.
 
+### Paper Training Configuration
+
+**Hardware Requirements:**
+- We used 4 V100 GPUs (32GB each) for all model training
+- Training batch sizes in the default configuration are optimized for this setup
+- Adjust batch sizes in `components/*/configs/` or in `fairseq-train` arguments if using different hardware
+
+**Notes on Paper's Implementation:**
+- **Mel synthesizer training**: Only samples shorter than 15 seconds were used
+- **LibriTTS-R partitioning**: We used random partitioning across the entire dataset, whereas the current practice is subset-wise partitioning
+- **Flow-matching duration predictor**: Trained separately with other modules frozen, initialized from a well-trained regression-based model
+
+> **💡 Note:** These implementation choices may affect training dynamics and final model performance, but the impact should be small. The current codebase discards these practices for cleaness and clarity.
+
 ## Acknowledgements
 
 This work was conducted at Tencent TEA-Lab.
