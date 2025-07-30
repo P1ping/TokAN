@@ -36,11 +36,23 @@ source venv/bin/activate
 # Or you can create a new environment via conda
 ```
 
-### Step 2: Install PyTorch
+### Step 2: Install PyTorch and (optional) eSpeak
 
 For successful load of fairseq models, we recommend `torch<=2.5.1`.
 
-> For other CUDA versions or CPU-only installation, please visit the [official PyTorch website](https://pytorch.org/get-started/locally/) for the correct command.
+> For other CUDA versions or CPU-only installation of PyTorch, please visit the [official PyTorch website](https://pytorch.org/get-started/locally/) for the correct command.
+
+**Install eSpeak (required for training):**
+```bash
+# On Ubuntu/Debian
+sudo apt-get install espeak espeak-data
+# On other systems, visit: http://espeak.sourceforge.net/
+
+# Please ensure the output version is latest (1.48)
+espeak --version
+```
+
+> **Note:** eSpeak (version 1.48) is required if you plan to run the training pipeline, as it's used for phoneme processing in the text-to-speech components.
 
 ### Step 3: Install the Custom Fairseq Dependency
 
@@ -314,7 +326,8 @@ pretrained_models/
     └── tokan-t2t-base-paper/             # Token-to-token model
         ├─ model.pt                       # Fairseq checkpoint
         ├─ dict.src.txt                   # Input token dictionary
-        └─ dict.tgt.txt                   # Output token dictionary
+        ├─ dict.tgt.txt                   # Input token dictionary
+        └─ dict.aux.txt                   # Intermediate phone dictionary
 ```
 
 **Using Pre-trained Models:**
