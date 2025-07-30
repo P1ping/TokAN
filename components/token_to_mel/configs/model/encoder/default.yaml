@@ -8,22 +8,22 @@ encoder_params:
   p_dropout: 0.1
   prenet: true
 
-# duration_predictor_params:
-#   dp_type: regression
-#   n_layers: 3
-#   input_channels: ${model.encoder.encoder_params.n_channels}
-#   n_channels: 256
-#   kernel_size: 3
-#   p_dropout: 0.2
-#   log_scale: true
-
 duration_predictor_params:
-  dp_type: flow_matching
-  n_layers: 4
+  dp_type: regression
+  n_layers: 3
   input_channels: ${model.encoder.encoder_params.n_channels}
   n_channels: 256
-  n_heads: 4
-  p_dropout: 0.1
-  log_scale: false
-  training_cfg_rate: 0.2
-  inference_cfg_rate: 0.5
+  kernel_size: 3
+  p_dropout: 0.2
+  log_scale: true
+
+# duration_predictor_params:
+#   dp_type: flow_matching
+#   n_layers: 4
+#   input_channels: ${model.encoder.encoder_params.n_channels}
+#   n_channels: 256
+#   n_heads: 4
+#   p_dropout: 0.1
+#   log_scale: false
+#   training_cfg_rate: 0.2
+#   inference_cfg_rate: 0.5
