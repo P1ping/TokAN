@@ -1,0 +1,180 @@
+# =============================================================================
+# TokAN inference-only config bundle.
+#
+# Defines three top-level objects:
+#   * lm        : the autoregressive token-to-token speech LM (ARLM).
+#   * quantizer : the joint SSL VQ + flow-matching speech decoder.
+#                 Used both to extract source tokens from waveforms AND to
+#                 synthesize Mel-spectrograms from target tokens.
+#   * hift      : the HiFi-GAN-style vocoder.
+# =============================================================================
+
+# ----- Global hyper-params -----
+sample_rate: 24000
+hop_size: 480
+feat_dim: 80
+
+speech_vocab_size: 1024
+ctc_vocab_size_lm: 198
+ctc_vocab_size_quantizer: 41
+input_speech_embed_dim: 768
+lm_input_dim: 768
+lm_output_dim: 768
+
+codebook_size: 1024
+ssl_dim: 1024
+spk_embed_dim: 256
+flow_embed_dim: 384
+ctc_dim: 384
+
+
+# =============================================================================
+# Autoregressive speech LM (ARLM)
+# =============================================================================
+lm: !new:tokan.model.arlm.arlm.TransformerLM
+    lm_input_dim: !ref <lm_input_dim>
+    lm_output_dim: !ref <lm_output_dim>
+    speech_vocab_size: !ref <speech_vocab_size>
+    speech_embed_dim: !ref <input_speech_embed_dim>
+    ctc_vocab_size: !ref <ctc_vocab_size_lm>
+    ctc_target_key: "phone_token"
+    length_normalized_loss: True
+    lsm_weight: 0
+    ctc_loss_weight: 0.5
+    mask_in_input: True   # was set true at pretrain time; required for matching the embedding shape
+    token_encoder: !new:tokan.model.arlm.encoder.RotaryEncoder
+        input_dim: !ref <input_speech_embed_dim>
+        embed_dim: !ref <lm_input_dim>
+        hidden_dim: 3072
+        num_heads: 12
+        num_layers: 8
+        dropout_rate: 0.1
+        is_causal: false
+    lm: !new:tokan.model.arlm.encoder.RotaryEncoder
+        input_dim: !ref <lm_input_dim>
+        embed_dim: !ref <lm_output_dim>
+        hidden_dim: 3072
+        num_heads: 12
+        num_layers: 16
+        dropout_rate: 0.1
+        is_causal: true
+    sampling: !name:tokan.utils.common.ras_sampling
+        top_p: 0.8
+        top_k: 25
+        win_size: 10
+        tau_r: 0.1
+
+
+# =============================================================================
+# SSL VQ + flow-matching speech decoder (acts as both source quantizer AND
+# target Mel synthesizer)
+# =============================================================================
+quantizer: !new:tokan.model.ssl_quant.vq_joint.SslVectorQuantizerJoint
+    ssl_extractor: !new:tokan.model.ssl_wrapper.wavlm_extractor.WavLMExtractor
+        model_name: "microsoft/wavlm-large"
+        layer: 22
+        normalize_wav: True
+        padding: False
+    ssl_dim: !ref <ssl_dim>
+    codebook_size: !ref <codebook_size>
+    codebook_dim: 512
+    num_resblocks: 2
+    resblock_dim: 512
+    reconstruction_weight: 2.0
+    commitment_weight: 1.0
+    diversity_weight: 0.0
+    use_ema: True
+    decay: 0.99
+    flow: !ref <flow>
+    flow_deduplicate: true
+    flow_weight: 2.0
+    ctc_encoder: !ref <ctc_encoder>
+    ctc_vocab_size: !ref <ctc_vocab_size_quantizer>
+    ctc_target_key: "text_token"
+    ctc_deduplicate: true
+    ctc_weight: 0.5
+
+ctc_encoder: !new:tokan.transformer.encoder.ConformerEncoder
+    input_size: !ref <ctc_dim>
+    output_size: !ref <ctc_dim>
+    attention_heads: 6
+    linear_units: 1536
+    num_blocks: 12
+    dropout_rate: 0.1
+    positional_dropout_rate: 0.1
+    attention_dropout_rate: 0.1
+    normalize_before: True
+    input_layer: 'linear'
+    pos_enc_layer_type: 'rel_pos_espnet'
+    selfattention_layer_type: 'rel_selfattn'
+    use_cnn_module: False
+    macaron_style: False
+    static_chunk_size: -1
+
+flow: !new:tokan.model.ssl_quant.dit_feat_flow.DiTFeatFlow
+    embed_dim: !ref <flow_embed_dim>
+    spk_embed_dim: !ref <spk_embed_dim>
+    token_encoder: !new:tokan.transformer.encoder.ConformerEncoder
+        input_size: !ref <ssl_dim>
+        output_size: !ref <flow_embed_dim>
+        attention_heads: 6
+        linear_units: 1536
+        num_blocks: 8
+        dropout_rate: 0.1
+        positional_dropout_rate: 0.1
+        attention_dropout_rate: 0.1
+        normalize_before: True
+        input_layer: 'linear'
+        pos_enc_layer_type: 'rel_pos_espnet'
+        selfattention_layer_type: 'rel_selfattn'
+        use_cnn_module: False
+        macaron_style: False
+        static_chunk_size: -1
+    length_regulator: !new:tokan.model.flow.length_regulator.LengthRegulator
+    duration_predictor: !new:tokan.model.flow.duration_predictor.FlowMatchingDurationPredictor
+        cond_dim: !ref <flow_embed_dim>
+        embed_dim: 256
+        num_heads: 4
+        num_layers: 4
+        dropout_rate: 0.1
+        log_scale: false
+    speech_decoder: !new:tokan.model.dit.dit_speech_encoder.DiTSpeechEncoder
+        cond_dim: !ref <flow_embed_dim>
+        output_dim: !ref <feat_dim>
+        spk_dim: !ref <spk_embed_dim>
+        embed_dim: !ref <flow_embed_dim>
+        num_heads: 6
+        num_layers: 12
+        postnet_mult: 2
+        postnet_dim: 128
+        dropout_rate: 0.1
+        cond_cfg_rate: 0.15
+        spk_cfg_rate: 0.15
+
+
+# =============================================================================
+# HiFT vocoder (Mel -> waveform)
+# =============================================================================
+hift: !new:tokan.model.hift.generator.HiFTGenerator
+    in_channels: 80
+    base_channels: 512
+    nb_harmonics: 8
+    sampling_rate: !ref <sample_rate>
+    nsf_alpha: 0.1
+    nsf_sigma: 0.003
+    nsf_voiced_threshold: 10
+    upsample_rates: [8, 5, 3]
+    upsample_kernel_sizes: [16, 11, 7]
+    istft_params:
+        n_fft: 16
+        hop_len: 4
+    resblock_kernel_sizes: [3, 7, 11]
+    resblock_dilation_sizes: [[1, 3, 5], [1, 3, 5], [1, 3, 5]]
+    source_resblock_kernel_sizes: [7, 7, 11]
+    source_resblock_dilation_sizes: [[1, 3, 5], [1, 3, 5], [1, 3, 5]]
+    lrelu_slope: 0.1
+    audio_limit: 0.99
+    f0_predictor: !new:tokan.model.hift.f0_predictor.ConvRNNF0Predictor
+        num_class: 1
+        in_channels: 80
+        cond_channels: 512

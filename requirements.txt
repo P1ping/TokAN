@@ -1,0 +1,11 @@
+torch>=2.0
+torchaudio
+numpy
+scipy
+soundfile
+hyperpyyaml
+huggingface_hub
+einops
+resemblyzer
+transformers>=4.39
+vector_quantize_pytorch
