@@ -1,14 +1,12 @@
 # TokAN
 
-Token-based **A**utoregressive **N**ormalization for speech — open-source
-inference code for the autoregressive (ARLM) pipeline used to convert one
+**Tok**en-based **A**utoregressive **N**ormalization for speech — open-source
+code for the autoregressive (ARLM) pipeline used to convert one
 speaker's speech tokens into another's. The model takes a source speech
 waveform and a reference speaker waveform, and emits a new waveform that
 preserves the linguistic content of the source while rendering it with the
 voice / accent profile implied by the reference.
-
-This repository is **inference-only**. The training pipeline lives in
-the parent FlexAN research codebase.
+This repository is currently inference-only.
 
 ## Pipeline
 
