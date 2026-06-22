@@ -1,12 +1,23 @@
-# TokAN
+# TokAN: Accent Normalization Using Self-Supervised Tokens
 
-**Tok**en-based **A**utoregressive **N**ormalization for speech — open-source
-code for the autoregressive (ARLM) pipeline used to convert one
-speaker's speech tokens into another's. The model takes a source speech
-waveform and a reference speaker waveform, and emits a new waveform that
-preserves the linguistic content of the source while rendering it with the
-voice / accent profile implied by the reference.
+[![Paper](https://img.shields.io/badge/Paper-arXiv-b31b1b.svg)](https://arxiv.org/abs/TODO)
+[![Demo](https://img.shields.io/badge/Demo-Samples-brightgreen.svg)](https://p1ping.github.io/TokAN-Samples)
+
+Official open-source implementation of **"TokAN: Accent Normalization Using
+Self-Supervised Tokens"**. TokAN performs accent normalization through an
+autoregressive language model (ARLM) over self-supervised speech tokens: it
+takes a source speech waveform and a reference speaker waveform, and emits a
+new waveform that preserves the linguistic content of the source while
+rendering it with the voice / accent profile implied by the reference.
 This repository is currently inference-only.
+
+- 📄 **Paper:** https://arxiv.org/abs/TODO *(placeholder — link to be updated)*
+- 🔊 **Demo page:** https://p1ping.github.io/TokAN-Samples
+
+> [!NOTE]
+> TokAN is the journal extension of our earlier conference paper. The original
+> implementation lives in the legacy repository:
+> [P1ping/TokAN-Legacy](https://github.com/P1ping/TokAN-Legacy).
 
 ## Pipeline
 
@@ -98,3 +109,16 @@ tokan/
 - **Resemblyzer**: speaker embedder used to condition the flow-matching
   decoder.
 - **vector-quantize-pytorch**: VQ codebook implementation.
+
+## Citation
+
+If you find this work useful, please consider citing:
+
+```bibtex
+@article{tokan,
+  title   = {TokAN: Accent Normalization Using Self-Supervised Tokens},
+  author  = {TODO},
+  journal = {TODO},
+  year    = {TODO}
+}
+```
