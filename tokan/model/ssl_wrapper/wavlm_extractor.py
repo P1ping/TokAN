@@ -38,6 +38,12 @@ class WavLMModelModified(WavLMModel):
     Modified WavLMModel to allow directly passing attention_mask to encoder.
     By contrast, the original WavLMModel assumes attention_mask is waveform-level
     and computes feature-level mask internally.
+
+    transformers >= 5 no longer threads `output_hidden_states` through the encoder
+    (it returns only `last_hidden_state`), so per-layer outputs are collected with
+    forward hooks on the encoder layers, preserving the v4 semantics:
+    hidden_states[0] is the feature-projection output, hidden_states[i] is the
+    output of encoder layer i-1.
     """
 
     def forward(
@@ -55,24 +61,35 @@ class WavLMModelModified(WavLMModel):
 
         hidden_states, extract_features = self.feature_projection(extract_features)
 
-        encoder_outputs = self.encoder(
-            hidden_states,
-            attention_mask=attention_mask,
-            output_attentions=False,
-            output_hidden_states=output_hidden_states,
-            return_dict=True,
-        )
+        layer_outputs = []
+        hooks = []
+        if output_hidden_states:
+            hooks = [
+                layer.register_forward_hook(
+                    lambda module, args, output: layer_outputs.append(
+                        output[0] if isinstance(output, tuple) else output
+                    )
+                )
+                for layer in self.encoder.layers
+            ]
+        try:
+            encoder_outputs = self.encoder(hidden_states, attention_mask=attention_mask)
+        finally:
+            for hook in hooks:
+                hook.remove()
 
-        hidden_states = encoder_outputs[0]
+        last_hidden_state = encoder_outputs.last_hidden_state
 
         if self.adapter is not None:
-            hidden_states = self.adapter(hidden_states)
+            last_hidden_state = self.adapter(last_hidden_state)
+
+        all_hidden_states = (hidden_states,) + tuple(layer_outputs) if output_hidden_states else None
 
         return Wav2Vec2BaseModelOutput(
-            last_hidden_state=hidden_states,
+            last_hidden_state=last_hidden_state,
             extract_features=extract_features,
-            hidden_states=encoder_outputs.hidden_states,
-            attentions=encoder_outputs.attentions,
+            hidden_states=all_hidden_states,
+            attentions=None,
         )
 
 

@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Model checkpoints (auto-downloaded from Hugging Face)
+checkpoints/
+
+# Generated audio
+outputs/
+
+# Local test samples
+samples/

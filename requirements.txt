@@ -9,3 +9,7 @@ einops
 resemblyzer
 transformers>=4.39
 vector_quantize_pytorch
+# torchaudio >= 2.14 requires torchcodec for decoding audio files
+torchcodec
+# resemblyzer -> webrtcvad imports pkg_resources, removed in setuptools >= 81
+setuptools<81
